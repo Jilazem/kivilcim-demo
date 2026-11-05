@@ -119,7 +119,7 @@ export function createDemoGame(canvas, opts = {}) {
     update(dt) {
       if (st.gameOver) return;
       const speed = game.params.get('player.speed');
-      const ax = game.input.axis('left');
+      const ax = game.input.axis('right');
       const pb = arenaX();
       st.player.x = Math.max(pb.x0, Math.min(pb.x1, st.player.x + ax * speed * dt));
 
