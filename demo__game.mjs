@@ -228,7 +228,9 @@ export function createDemoGame(canvas, opts = {}) {
       draw.text(`SKOR ${st.score}`, hx + 18, hy + 40, { color: '#e8eef7', font: 'bold 22px ui-monospace, monospace' });
       draw.text(`DALGA ${st.wave}`, hx + 18, hy + 70, { color: '#9fb3c8', font: '16px ui-monospace, monospace' });
       draw.text(`CAN ${st.player.hp}`, hx + 18, hy + 94, { color: st.player.hp > 1 ? '#7ee787' : '#ff5470', font: '16px ui-monospace, monospace' });
-      draw.text(`EN İYİ ${highScore}`, hx + hw - 200, hy + 40, { color: '#ffd479', font: 'bold 18px ui-monospace, monospace' });
+      // Dar görünümde (dikey ekran) sağdaki "EN İYİ" skor metnine binmesin: sağa yasla, küçült.
+      if (hw >= 520) draw.text(`EN İYİ ${highScore}`, hx + hw - 200, hy + 40, { color: '#ffd479', font: 'bold 18px ui-monospace, monospace' });
+      else draw.text(`EN İYİ ${highScore}`, hx + hw - 12, hy + 40, { color: '#ffd479', font: 'bold 13px ui-monospace, monospace', align: 'right' });
 
       if (st.gameOver) {
         const cx = Math.round(hx + hw / 2);
