@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<title>KIVILCIM — demo arena</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #05070c; color: #e8eef7; font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; display: flex; gap: 16px; padding: 16px; }
+  canvas { background: #080d18; border: 1px solid #1d2a3d; display: block; }
+  aside { width: 300px; }
+  h1 { font-size: 15px; letter-spacing: .12em; margin: 0 0 12px; color: #4fd1c5; }
+  .group { border: 1px solid #1d2a3d; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+  .group h2 { font-size: 12px; margin: 0 0 8px; color: #9fb3c8; text-transform: uppercase; }
+  label { display: block; margin: 8px 0; font-size: 12px; color: #b9c8d8; }
+  label span { color: #ffe066; }
+  input[type=range] { width: 100%; }
+  button { background: #14203180; color: #e8eef7; border: 1px solid #2b3f59; border-radius: 4px; padding: 6px 10px; cursor: pointer; font: inherit; }
+  button:hover { border-color: #4fd1c5; }
+  pre { background: #0b1322; border: 1px solid #1d2a3d; border-radius: 6px; padding: 8px; max-height: 220px; overflow: auto; font-size: 11px; }
+  .hint { color: #7d90a6; font-size: 11px; }
+</style>
+</head>
+<body>
+<canvas id="game" width="960" height="540"></canvas>
+<aside>
+  <h1>KIVILCIM · canlı parametreler</h1>
+  <div id="panel"></div>
+  <div class="group">
+    <h2>durum</h2>
+    <pre id="json">-</pre>
+    <button id="copy">JSON kopyala</button>
+    <button id="reset">koşuyu sıfırla</button>
+  </div>
+  <p class="hint">Ok tuşları / A-D: hareket · Boşluk: ateş · ?dev=1 ile dev köprüsü açılır.</p>
+</aside>
+
+<script type="module">
+import { createDemoGame } from './demo__game.mjs';
+import { runScenario } from './scenario.mjs';
+
+const params = new URLSearchParams(location.search);
+const canvas = document.getElementById('game');
+const game = createDemoGame(canvas, { seed: Number(params.get('seed')) || 1337 });
+
+/* üretim paketinde de kalan tutamak — dev köprüsü değil; CLI inspect/run üretim
+ * HTML'ini bu tutamak üzerinden sınar (build-check bu satırı silmez). */
+globalThis.KIVILCIM_GAME = game;
+
+/* panel — params.describe() üzerinden üretilir, sessiz clamp yok */
+const panel = document.getElementById('panel');
+const desc = game.params.describe();
+for (const [group, keys] of Object.entries(desc.groups)) {
+  const box = document.createElement('div');
+  box.className = 'group';
+  const h = document.createElement('h2');
+  h.textContent = group;
+  box.appendChild(h);
+  for (const [key, def] of Object.entries(keys)) {
+    const label = document.createElement('label');
+    const val = document.createElement('span');
+    const path = `${group}.${key}`;
+    if (def.type === 'bool') {
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.checked = !!def.value;
+      input.onchange = () => { try { game.params.set(path, input.checked); } catch (e) { label.title = e.message; } };
+      label.textContent = `${key} `;
+      label.appendChild(input);
+      label.appendChild(val);
+      val.textContent = def.value ? ' açık' : ' kapalı';
+    } else if (def.type === 'enum') {
+      const input = document.createElement('select');
+      for (const o of def.options) {
+        const opt = document.createElement('option');
+        opt.value = o; opt.textContent = o;
+        if (o === def.value) opt.selected = true;
+        input.appendChild(opt);
+      }
+      input.onchange = () => { try { game.params.set(path, input.value); } catch (e) { label.title = e.message; } };
+      label.textContent = `${key} `;
+      label.appendChild(input);
+      label.appendChild(val);
+      val.textContent = ' ' + def.value;
+    } else {
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.min = def.min; input.max = def.max; input.step = def.type === 'int' ? 1 : 1;
+      input.value = def.value;
+      val.textContent = ` ${def.value}${def.unit || ''}`;
+      input.oninput = () => {
+        try { game.params.set(path, Number(input.value)); val.textContent = ` ${input.value}${def.unit || ''}`; }
+        catch (e) { label.title = e.message; }
+      };
+      label.textContent = `${key} `;
+      label.appendChild(val);
+      label.appendChild(document.createElement('br'));
+      label.appendChild(input);
+    }
+    box.appendChild(label);
+  }
+  panel.appendChild(box);
+}
+
+const jsonOut = document.getElementById('json');
+function refresh() { jsonOut.textContent = JSON.stringify(game.inspect.snapshot(), null, 1).slice(0, 4000); }
+setInterval(refresh, 250);
+document.getElementById('copy').onclick = () => { navigator.clipboard?.writeText(JSON.stringify(game.inspect.snapshot(), null, 2)); };
+document.getElementById('reset').onclick = () => game.reset();
+game.invokeCommand('resetRun');
+
+
+
+if (params.get('headless') !== '1') game.start();
+else game.stop();
+</script>
+</body>
+</html>
