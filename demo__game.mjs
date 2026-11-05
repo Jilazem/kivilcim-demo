@@ -259,6 +259,7 @@ export function createDemoGame(canvas, opts = {}) {
         score: st.score,
         wave: st.wave,
         enemies: st.enemies.length,
+        enemyXs: st.enemies.map((e) => Number(e.x.toFixed(1))),
         bullets: st.bullets.length,
         particles: st.particles.length,
         hits: st.hits,
