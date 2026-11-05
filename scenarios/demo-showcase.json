@@ -1,0 +1,21 @@
+{
+  "name": "demo-showcase",
+  "seed": 42,
+  "viewport": [1280, 720],
+  "steps": [
+    { "wait": 30 },
+    { "press": "ArrowRight" },
+    { "wait": 60 },
+    { "release": "ArrowRight" },
+    { "expect": { "state.player.x": { "gt": 200 } } },
+    { "set": { "player.speed": 400 } },
+    { "capture": "demo-01-baslangic" },
+    { "command": "spawnWave", "args": [3] },
+    { "wait": 45 },
+    { "capture": "demo-02-dalga" },
+    { "until": { "events.waveCleared": { "gte": 1 } }, "within": 600 },
+    { "capture": "demo-03-son" },
+    { "contrast": [10, 10, 320, 100] },
+    { "flashes": 120 }
+  ]
+}

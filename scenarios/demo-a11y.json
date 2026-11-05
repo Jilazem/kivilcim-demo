@@ -1,0 +1,13 @@
+{
+  "name": "demo-a11y",
+  "viewport": [960, 540],
+  "reducedMotion": true,
+  "steps": [
+    { "wait": 45 },
+    { "contrast": [10, 10, 320, 100] },
+    { "contrast": [740, 16, 200, 44] },
+    { "expect": { "state.player.hp": { "gte": 1 } } },
+    { "capture": "a11y-1" },
+    { "flashes": 40 }
+  ]
+}

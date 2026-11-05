@@ -47,7 +47,13 @@ export function devEnabled(search) {
   return /(^|[?&])dev=1(&|$)/.test(q || '');
 }
 
-
+/* @dev-start — build-check bu bölgeyi üretim paketinden çıkarır */
+/** Dev köprüsünü kurar. `__KIVILCIM_DEV__` adı YALNIZ bu bölgede geçer (build-check bunu doğrular). */
+export function installDevBridge(obj) {
+  globalThis.__KIVILCIM_DEV__ = obj;
+  return obj;
+}
+/* @dev-end */
 
 /* ---------------------------------------------------------------- RNG */
 
@@ -695,7 +701,20 @@ export class Game {
     this.storage = new Storage(o.storageNS || 'kivilcim', { version: o.storageVersion || 1 });
     this.draw = new Draw(this);
 
-    
+    /* @dev-start */
+    if (this.dev) {
+      installDevBridge({
+        game: this,
+        params: () => this.params.describe(),
+        snapshot: () => this.inspect.snapshot(),
+        hash: () => this.hash(),
+        step: (n) => this.step(n),
+        capture: (name) => this.capture(name),
+        command: (name, args) => this.invokeCommand(name, args || []),
+        runScenario: (scenario) => this.runScenario(scenario),
+      });
+    }
+    /* @dev-end */
   }
 
   /** Mantıksal çözünürlüğü değiştirir (senaryo `viewport` adımı). */

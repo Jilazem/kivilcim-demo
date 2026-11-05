@@ -1,0 +1,15 @@
+{
+  "name": "demo-balance",
+  "viewport": [960, 540],
+  "reducedMotion": false,
+  "steps": [
+    { "wait": 10 },
+    { "set": { "player.speed": 400, "world.waveSize": 6 } },
+    { "expect": { "params.player.speed": { "eq": 400 }, "params.world.waveSize": { "eq": 6 } } },
+    { "command": "spawnWave", "args": [3] },
+    { "until": { "events.waveCleared": { "gte": 1 } }, "within": 900 },
+    { "expect": { "events.enemyDown": { "gte": 3 }, "state.score": { "gt": 0 } } },
+    { "capture": "balance-1" },
+    { "expect": { "scene": "arena" } }
+  ]
+}

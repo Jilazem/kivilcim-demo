@@ -1,0 +1,7 @@
+{
+  "name": "bad-fixture",
+  "steps": [
+    { "wait": 5 },
+    { "expect": { "tick": { "gt": 99999 } } }
+  ]
+}

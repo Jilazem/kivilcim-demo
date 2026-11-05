@@ -1,0 +1,18 @@
+{
+  "name": "demo-smoke",
+  "viewport": [960, 540],
+  "reducedMotion": false,
+  "steps": [
+    { "wait": 30 },
+    { "press": "ArrowRight" },
+    { "wait": 60 },
+    { "release": "ArrowRight" },
+    { "expect": { "scene": "arena" } },
+    { "expect": { "state.player.x": { "gt": 200 } } },
+    { "expect": { "state.player.x": { "lt": 960 } } },
+    { "expect": { "tick": { "gte": 91 }, "state.gameOver": { "eq": false } } },
+    { "capture": "smoke-1" },
+    { "contrast": [10, 10, 320, 100] },
+    { "flashes": 120 }
+  ]
+}

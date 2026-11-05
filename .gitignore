@@ -1,0 +1,9 @@
+# Koşu çıktıları (kanıt dosyaları depoda tutulmaz)
+out/
+
+# Editör/yedek dosyaları
+*.bak-*
+.DS_Store
+
+# npm YASAK — node_modules bu depoda yoktur, yine de korunur
+node_modules/

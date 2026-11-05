@@ -1,0 +1,316 @@
+{
+  "name": "demo-video",
+  "seed": 42,
+  "viewport": [
+    1280,
+    720
+  ],
+  "reducedMotion": false,
+  "steps": [
+    {
+      "wait": 20
+    },
+    {
+      "press": "ArrowRight"
+    },
+    {
+      "set": {
+        "player.speed": 400
+      }
+    },
+    {
+      "command": "spawnWave",
+      "args": [
+        3
+      ]
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-01"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-02"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-03"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-04"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-05"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-06"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-07"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-08"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-09"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-10"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-11"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-12"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-13"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-14"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-15"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-16"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-17"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-18"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-19"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-20"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-21"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-22"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-23"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-24"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-25"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-26"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-27"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-28"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-29"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-30"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-31"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-32"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-33"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-34"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-35"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-36"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-37"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-38"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-39"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-40"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-41"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-42"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-43"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-44"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-45"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-46"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-47"
+    },
+    {
+      "wait": 8
+    },
+    {
+      "capture": "kare-48"
+    }
+  ]
+}
