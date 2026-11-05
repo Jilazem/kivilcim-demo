@@ -63,9 +63,19 @@ export function createDemoGame(canvas, opts = {}) {
     }
   }
 
+  // Görünür dünya penceresi (dikey ekranda kapak kırpması dünyanın yalnız ortasını
+  // gösterir): oyuncu ve düşmanlar bu şeridin içinde tutulur, aksi halde ekran dışında kalırlar.
+  function arenaX() {
+    const v = game.visibleWorld();
+    const x0 = Math.max(24, v.x + 16);
+    const x1 = Math.min(936, v.x + v.w - 16);
+    return { x0: Math.min(x0, x1 - 32), x1: Math.max(x1, x0 + 32) };
+  }
+
   function spawnEnemy() {
+    const b = arenaX();
     st.enemies.push({
-      x: game.random.int(70, 890),
+      x: game.random.int(Math.round(b.x0), Math.round(b.x1)),
       y: -24,
       w: 24,
       h: 24,
@@ -110,7 +120,8 @@ export function createDemoGame(canvas, opts = {}) {
       if (st.gameOver) return;
       const speed = game.params.get('player.speed');
       const ax = game.input.axis('left');
-      st.player.x = Math.max(30, Math.min(930, st.player.x + ax * speed * dt));
+      const pb = arenaX();
+      st.player.x = Math.max(pb.x0, Math.min(pb.x1, st.player.x + ax * speed * dt));
 
       const autoFire = game.params.get('player.autoFire');
       const fireInterval = game.params.get('player.fireInterval');
@@ -155,6 +166,8 @@ export function createDemoGame(canvas, opts = {}) {
         const e = st.enemies[i];
         e.y += espeed * dt;
         e.x += Math.sin((game.tick + i * 13) / 40) * e.wob;
+        const eb = arenaX();
+        e.x = Math.max(eb.x0, Math.min(eb.x1, e.x));
         if (e.y > st.player.y - 8) {
           st.enemies.splice(i, 1);
           st.player.hp -= 1;
