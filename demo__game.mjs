@@ -4,7 +4,7 @@
  * commands, storage (şema denetimli), juice (particle/screenshake), deterministik RNG.
  * Sim kodunda Math.random / Date.now / performance.now YOK.
  */
-import { Game } from '../kivilcim.mjs';
+import { Game } from './kivilcim.mjs';
 
 export function createDemoGame(canvas, opts = {}) {
   const game = new Game({
