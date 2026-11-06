@@ -72,6 +72,57 @@ export function createDemoGame(canvas, opts = {}) {
     return { x0: Math.min(x0, x1 - 32), x1: Math.max(x1, x0 + 32) };
   }
 
+  /* ---------------------------------------------------------------- U1: HUD yön göstergesi
+   * YALNIZ görünür dünya dışındaki düşmanlar için kenar oku çizilir. Ekran dikdörtgeni
+   * kamera/ölçek fonksiyonundan gelir (game.visibleWorld()) — ayrı ekran dönüşümü yok;
+   * çizim mantıksal dünya biriminde yapılır, var olan canvas dönüşümü ekrana taşır.
+   * Aynı yöndeki (45°'lik sektör) düşmanlar TEK göstergede toplanır, sayısı yazılır.
+   * En fazla 8 gösterge. Ekranda görünen düşmana ek işaret çizilmez.
+   */
+  const IND_MAX = 8;       // aynı anda en fazla gösterge
+  const IND_SECTORS = 8;   // 45°'lik yön sektörü → aynı yön tek gösterge
+  const IND_MARGIN = 14;   // görünür dünya kenarından içeri pay (ok tamamen görünür kalsın)
+
+  function hudIndicators() {
+    const v = game.visibleWorld();
+    const cx = v.x + v.w / 2;
+    const cy = v.y + v.h / 2;
+    const rx = Math.max(8, v.w / 2 - IND_MARGIN);
+    const ry = Math.max(8, v.h / 2 - IND_MARGIN);
+    const sectors = new Map();
+    for (const e of st.enemies) {
+      const onScreen = e.x >= v.x && e.x <= v.x + v.w && e.y >= v.y && e.y <= v.y + v.h;
+      if (onScreen) continue; // ekranda görünen düşman: ek işaret yok
+      let dx = e.x - cx;
+      let dy = e.y - cy;
+      const len = Math.hypot(dx, dy) || 1;
+      dx /= len; dy /= len;
+      const ang = Math.atan2(dy, dx);
+      const raw = Math.round((ang / (Math.PI * 2)) * IND_SECTORS);
+      const idx = ((raw % IND_SECTORS) + IND_SECTORS) % IND_SECTORS;
+      const cur = sectors.get(idx);
+      if (cur) { cur.count += 1; cur.dx += dx; cur.dy += dy; }
+      else sectors.set(idx, { count: 1, dx, dy });
+    }
+    const out = [];
+    for (const s of sectors.values()) {
+      const len = Math.hypot(s.dx, s.dy) || 1;
+      const dx = s.dx / len;
+      const dy = s.dy / len;
+      // ışını görünür dikdörtgenin kenarına izdüşür (görünür pencere dikdörtgeni = ekran)
+      const t = Math.min(rx / Math.max(1e-6, Math.abs(dx)), ry / Math.max(1e-6, Math.abs(dy)));
+      out.push({
+        x: Number((cx + dx * t).toFixed(2)),
+        y: Number((cy + dy * t).toFixed(2)),
+        dx: Number(dx.toFixed(4)),
+        dy: Number(dy.toFixed(4)),
+        count: s.count,
+      });
+    }
+    out.sort((a, b) => b.count - a.count || a.y - b.y || a.x - b.x);
+    return out.slice(0, IND_MAX);
+  }
+
   function spawnEnemy() {
     const b = arenaX();
     st.enemies.push({
@@ -245,6 +296,22 @@ export function createDemoGame(canvas, opts = {}) {
       if (hw >= 520) draw.text(`EN İYİ ${highScore}`, hx + hw - 200, hy + 40, { color: '#ffd479', font: 'bold 18px ui-monospace, monospace' });
       else draw.text(`EN İYİ ${highScore}`, hx + hw - 12, hy + 40, { color: '#ffd479', font: 'bold 13px ui-monospace, monospace', align: 'right' });
 
+      /* U1 — ekran dışı düşmanların yönü: HUD bandının üstüne çizilir ki okunur kalsın.
+       * Ok, görünür dünya kenarına yerleşir; aynı yöndeki düşmanlar tek oku paylaşır. */
+      for (const ind of hudIndicators()) {
+        const px = -ind.dy; // ok yönüne dik birim vektör
+        const py = ind.dx;
+        const bx = ind.x - ind.dx * 12;
+        const by = ind.y - ind.dy * 12;
+        draw.line(bx, by, ind.x, ind.y, '#ff5470', 3);
+        draw.line(ind.x, ind.y, ind.x - ind.dx * 9 + px * 6.3, ind.y - ind.dy * 9 + py * 6.3, '#ff5470', 3);
+        draw.line(ind.x, ind.y, ind.x - ind.dx * 9 - px * 6.3, ind.y - ind.dy * 9 - py * 6.3, '#ff5470', 3);
+        draw.circle(ind.x, ind.y, 2.5, '#ffe3e8');
+        if (ind.count > 1) {
+          draw.text(String(ind.count), ind.x - ind.dx * 20, ind.y - ind.dy * 20 + 5, { color: '#ffe3e8', font: 'bold 13px ui-monospace, monospace', align: 'center' });
+        }
+      }
+
       if (st.gameOver) {
         const cx = Math.round(hx + hw / 2);
         const cy = Math.round(hy + vis.h / 2);
@@ -277,6 +344,10 @@ export function createDemoGame(canvas, opts = {}) {
   game.command('resetRun', () => resetRun());
   game.command('heal', (n) => { st.player.hp = Math.min(9, st.player.hp + (Number(n) || 1)); return st.player.hp; });
   game.command('killAll', () => { st.enemies.length = 0; return 0; });
+
+  /* U1 — ölçülebilir HUD göstergesi tutamağı (sim durumuna/hash'e girmez: ölçekleme
+   * simülasyonu değiştirmez, gösterge yalnız çizim katmanıdır). */
+  game.hudIndicators = () => hudIndicators();
 
   game.go('arena');
   return game;

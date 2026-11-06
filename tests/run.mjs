@@ -431,6 +431,49 @@ test('demo: ArrowRight basılı 30 tick player.x ARTAR, ArrowLeft AZALIR', () =>
   if (Math.abs(deltaR + deltaL) > 0.01) throw new Error(`yön büyüklükleri simetrik değil: +${deltaR} / ${deltaL}`);
 });
 
+/* 27 — U1: ekran dışı düşmanlar için HUD yön göstergesi */
+test('U1: gösterge yalnız ekran DIŞI düşman için, aynı yönde tek ok, en fazla 8', () => {
+  const g = createDemoGame(makeStubCanvas(), { seed: 9 });
+  g.fitToViewport({ vw: 390, vh: 844, dpr: 3 });
+  const vis = g.visibleWorld();
+  g.invokeCommand('killAll');
+  eq(g.hudIndicators().length, 0, 'düşman yokken gösterge olmamalı');
+
+  g.invokeCommand('spawnWave', [1]);
+  const one = g.hudIndicators();
+  eq(one.length, 1, 'tek ekran dışı düşman tek gösterge üretmeli');
+  eq(one[0].count, 1, 'tek düşmanın sayısı 1 olmalı');
+
+  // düşman aşağı inip görünür alana girince gösterge kalkmalı (45 tick × 0.6 px = 27 px → y=3)
+  g.step(45);
+  eq(g.hudIndicators().length, 0, 'ekranda görünen düşman için gösterge olmamalı');
+
+  // aynı yöndeki düşmanlar tek oka toplanır; toplam sayı korunur
+  g.invokeCommand('killAll');
+  g.invokeCommand('spawnWave', [8]);
+  const many = g.hudIndicators();
+  if (many.length < 1 || many.length > 8) throw new Error(`gösterge sayısı 1..8 olmalı, gelen ${many.length}`);
+  const sum = many.reduce((s, i) => s + i.count, 0);
+  eq(sum, 8, 'toplanan gösterge sayıları düşman sayısını vermeli');
+
+  // üst sınır: 40 düşman da en fazla 8 gösterge
+  g.invokeCommand('killAll');
+  g.invokeCommand('spawnWave', [40]);
+  const capped = g.hudIndicators();
+  if (capped.length > 8) throw new Error(`gösterge üst sınırı 8 aşıldı: ${capped.length}`);
+
+  // her gösterge görünür dünya dikdörtgeninin İÇİNDE olmalı (kenar oku)
+  for (const ind of capped) {
+    if (!(ind.x >= vis.x - 0.01 && ind.x <= vis.x + vis.w + 0.01)) throw new Error(`gösterge x görünür alan dışında: ${JSON.stringify(ind)} / ${JSON.stringify(vis)}`);
+    if (!(ind.y >= vis.y - 0.01 && ind.y <= vis.y + vis.h + 0.01)) throw new Error(`gösterge y görünür alan dışında: ${JSON.stringify(ind)} / ${JSON.stringify(vis)}`);
+  }
+
+  // gösterge çizimi simülasyon durumunu değiştirmemeli (hash sabit)
+  const h0 = g.hash();
+  g.render();
+  eq(g.hash(), h0, 'gösterge çizimi hash değiştirmemeli');
+});
+
 const passed = results.filter((r) => r.ok).length;
 const total = results.length;
 console.log('');
