@@ -82,6 +82,8 @@ export function createDemoGame(canvas, opts = {}) {
   const IND_MAX = 8;       // aynı anda en fazla gösterge
   const IND_SECTORS = 8;   // 45°'lik yön sektörü → aynı yön tek gösterge
   const IND_MARGIN = 14;   // görünür dünya kenarından içeri pay (ok tamamen görünür kalsın)
+  const HUD_BAND_H = 112;  // üst HUD bandının yüksekliği (çizimle aynı)
+  const HUD_BOTTOM_H = 40; // alt şerit (zemin çizgisi) yüksekliği
 
   function hudIndicators() {
     const v = game.visibleWorld();
@@ -105,15 +107,21 @@ export function createDemoGame(canvas, opts = {}) {
       else sectors.set(idx, { count: 1, dx, dy });
     }
     const out = [];
+    // HUD güvenli alanı: üst bandın altı ile alt şeridin üstü arası. Ok bu alana kırpılır,
+    // böylece skor/dalga/can metinlerinin üstüne binmez (yön bilgisi korunur, konum kırpılır).
+    const bandH = Math.min(HUD_BAND_H, v.h);
+    const safeTop = v.y + bandH + IND_MARGIN;
+    const safeBottom = Math.max(safeTop, v.y + v.h - HUD_BOTTOM_H - IND_MARGIN);
     for (const s of sectors.values()) {
       const len = Math.hypot(s.dx, s.dy) || 1;
       const dx = s.dx / len;
       const dy = s.dy / len;
       // ışını görünür dikdörtgenin kenarına izdüşür (görünür pencere dikdörtgeni = ekran)
       const t = Math.min(rx / Math.max(1e-6, Math.abs(dx)), ry / Math.max(1e-6, Math.abs(dy)));
+      const py = Math.min(Math.max(cy + dy * t, safeTop), safeBottom);
       out.push({
         x: Number((cx + dx * t).toFixed(2)),
-        y: Number((cy + dy * t).toFixed(2)),
+        y: Number(py.toFixed(2)),
         dx: Number(dx.toFixed(4)),
         dy: Number(dy.toFixed(4)),
         count: s.count,
@@ -296,8 +304,8 @@ export function createDemoGame(canvas, opts = {}) {
       if (hw >= 520) draw.text(`EN İYİ ${highScore}`, hx + hw - 200, hy + 40, { color: '#ffd479', font: 'bold 18px ui-monospace, monospace' });
       else draw.text(`EN İYİ ${highScore}`, hx + hw - 12, hy + 40, { color: '#ffd479', font: 'bold 13px ui-monospace, monospace', align: 'right' });
 
-      /* U1 — ekran dışı düşmanların yönü: HUD bandının üstüne çizilir ki okunur kalsın.
-       * Ok, görünür dünya kenarına yerleşir; aynı yöndeki düşmanlar tek oku paylaşır. */
+      /* U1 — ekran dışı düşmanların yönü: HUD güvenli alanına (üst bandın altı, alt şeridin üstü)
+       * çizilir; skor/can metinleriyle çakışmaz. Aynı yöndeki düşmanlar tek oku paylaşır. */
       for (const ind of hudIndicators()) {
         const px = -ind.dy; // ok yönüne dik birim vektör
         const py = ind.dx;

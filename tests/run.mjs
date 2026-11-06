@@ -462,10 +462,11 @@ test('U1: gösterge yalnız ekran DIŞI düşman için, aynı yönde tek ok, en 
   const capped = g.hudIndicators();
   if (capped.length > 8) throw new Error(`gösterge üst sınırı 8 aşıldı: ${capped.length}`);
 
-  // her gösterge görünür dünya dikdörtgeninin İÇİNDE olmalı (kenar oku)
+  // her gösterge görünür dünya dikdörtgeninin İÇİNDE ve HUD güvenli alanında olmalı (metinlerle çakışmaz)
   for (const ind of capped) {
     if (!(ind.x >= vis.x - 0.01 && ind.x <= vis.x + vis.w + 0.01)) throw new Error(`gösterge x görünür alan dışında: ${JSON.stringify(ind)} / ${JSON.stringify(vis)}`);
     if (!(ind.y >= vis.y - 0.01 && ind.y <= vis.y + vis.h + 0.01)) throw new Error(`gösterge y görünür alan dışında: ${JSON.stringify(ind)} / ${JSON.stringify(vis)}`);
+    if (!(ind.y >= vis.y + 112 - 0.01)) throw new Error(`gösterge HUD bandının içine girdi (metinlerle çakışır): ${JSON.stringify(ind)}`);
   }
 
   // gösterge çizimi simülasyon durumunu değiştirmemeli (hash sabit)

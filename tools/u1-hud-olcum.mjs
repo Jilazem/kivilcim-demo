@@ -59,15 +59,15 @@ const BRIDGE = `(() => {
   if (!g) return false;
   if (!globalThis.__U1__) {
     globalThis.__U1__ = {
-      /* HUD şeridindeki (vis.y..vis.y+40) kırmızı gösterge piksellerini sayar.
-       * Kırmızı ölçütü dar tutuldu: #ff5470 (r255 g84 b112) ve kenar yumuşatma tonları.
+      /* HUD güvenli alanındaki (üst bandın altı, alt şeridin üstü) kırmızı gösterge piksellerini
+       * sayar. Kırmızı ölçütü dar tutuldu: #ff5470 (r255 g84 b112) ve kenar yumuşatma tonları.
        * Düşman gövdeleri camgöbeği olduğundan bu ölçüt onlardan etkilenmez. */
       stripRed(vis, bandH) {
         const sx = g.pixelScale || 1, sy = g.pixelScale || 1;
         const x = Math.max(0, Math.floor(vis.x * sx));
-        const y = Math.max(0, Math.floor(vis.y * sy));
+        const y = Math.max(0, Math.floor((vis.y + bandH) * sy));
         const w = Math.min(g.canvas.width - x, Math.ceil(vis.w * sx));
-        const h = Math.min(g.canvas.height - y, Math.ceil(bandH * sy));
+        const h = Math.max(0, Math.min(g.canvas.height - y, Math.ceil((vis.h - bandH - 40) * sy)));
         const d = g.ctx.getImageData(x, y, w, h).data;
         let red = 0, bright = 0;
         for (let i = 0; i < d.length; i += 4) {
@@ -96,7 +96,7 @@ const BRIDGE = `(() => {
         const inds = g.hudIndicators();
         const snap = g.inspect.snapshot();
         const perInd = inds.map((i) => {
-          const inside = i.x >= vis.x - 0.01 && i.x <= vis.x + vis.w + 0.01 && i.y >= vis.y - 0.01 && i.y <= vis.y + vis.h + 0.01;
+          const inside = i.x >= vis.x - 0.01 && i.x <= vis.x + vis.w + 0.01 && i.y >= vis.y + 112 - 0.01 && i.y <= vis.y + vis.h - 40 - 0.01;
           return { x: i.x, y: i.y, count: i.count, dx: i.dx, dy: i.dy, inside, redInBox: this.box(vis, i, 14) };
         });
         return {
@@ -143,15 +143,33 @@ const SHOT_STATS = (dataUrl) => `new Promise((resolve, reject) => {
   img.src = '${dataUrl}';
 })`;
 
-async function shoot(cdp, file) {
+/** Gerçek kare üretir: render'ı rAF içinde 12 kez çalıştırır (kompozitör bayat kare yakalamasın). */
+const WARM_FRAMES = `new Promise((resolve) => {
+  const g = globalThis.KIVILCIM_GAME;
+  g.stop();
+  let n = 0;
+  const loop = () => {
+    g.render();
+    n++;
+    if (n < 12) requestAnimationFrame(loop);
+    else setTimeout(resolve, 150);
+  };
+  requestAnimationFrame(loop);
+})`;
+
+async function shoot(cdp, file, expectRed) {
   await cdp.send('Page.bringToFront');
-  await cdp.evaluate('new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 150))))');
+  await cdp.evaluate(WARM_FRAMES);
   let png = Buffer.from((await cdp.send('Page.captureScreenshot', { format: 'png' })).data, 'base64');
   let stats = await cdp.evaluate(SHOT_STATS('data:image/png;base64,' + png.toString('base64')));
-  if (stats.nonBg < 5000) {
-    // kare boş geldiyse yeniden çiz ve tekrar yakala (en fazla 2 deneme)
-    await cdp.evaluate('(() => { const g = globalThis.KIVILCIM_GAME; g.render(); return true; })()');
-    await cdp.evaluate('new Promise(r => setTimeout(r, 250))');
+  const bad = () => stats.nonBg < 5000 || (expectRed && stats.red === 0);
+  if (bad()) {
+    await cdp.evaluate(WARM_FRAMES);
+    png = Buffer.from((await cdp.send('Page.captureScreenshot', { format: 'png' })).data, 'base64');
+    stats = await cdp.evaluate(SHOT_STATS('data:image/png;base64,' + png.toString('base64')));
+  }
+  if (bad()) {
+    await cdp.evaluate(WARM_FRAMES);
     png = Buffer.from((await cdp.send('Page.captureScreenshot', { format: 'png' })).data, 'base64');
     stats = await cdp.evaluate(SHOT_STATS('data:image/png;base64,' + png.toString('base64')));
   }
@@ -168,16 +186,16 @@ async function runViewport(cdp, { label, vw, vh, dpr, wave, shot }) {
     g.stop(); g.reset(); g.invokeCommand('killAll');
     g.invokeCommand('spawnWave', [${wave}]);
     g.render();
-    return u.measure('A: dusmanlar ekran disi', 40);
+    return u.measure('A: dusmanlar ekran disi', 112);
   })()`);
   const shotPath = path.join(outDir, shot);
-  const shotInfo = await shoot(cdp, shotPath);
+  const shotInfo = await shoot(cdp, shotPath, true);
 
   // durum B: hiç düşman yok → gösterge yok (piksel tabanı)
   const B = await cdp.evaluate(`(() => {
     const g = globalThis.KIVILCIM_GAME, u = globalThis.__U1__;
     g.invokeCommand('killAll'); g.render();
-    return u.measure('B: dusman yok', 40);
+    return u.measure('B: dusman yok', 112);
   })()`);
 
   // durum C: düşmanlar aşağı indi, ekranda GÖRÜNÜYOR → ek işaret olmamalı
@@ -187,9 +205,9 @@ async function runViewport(cdp, { label, vw, vh, dpr, wave, shot }) {
     g.invokeCommand('spawnWave', [${wave}]);
     g.step(45);
     g.render();
-    return u.measure('C: dusmanlar ekranda', 40);
+    return u.measure('C: dusmanlar ekranda', 112);
   })()`);
-  const shotC = await shoot(cdp, path.join(outDir, shot.replace('.png', '-c-ekranda.png')));
+  const shotC = await shoot(cdp, path.join(outDir, shot.replace('.png', '-c-ekranda.png')), false);
 
   // durum D: üst sınır — 40 düşman, en fazla 8 gösterge
   const D = await cdp.evaluate(`(() => {
@@ -197,7 +215,7 @@ async function runViewport(cdp, { label, vw, vh, dpr, wave, shot }) {
     g.invokeCommand('killAll');
     g.invokeCommand('spawnWave', [40]);
     g.render();
-    return u.measure('D: 40 dusman (ust sinir)', 40);
+    return u.measure('D: 40 dusman (ust sinir)', 112);
   })()`);
 
   return { label, viewport: { vw, vh, dpr }, fit, shot: shotInfo, shotC, A, B, C, D };
